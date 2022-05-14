@@ -1,5 +1,6 @@
 import requests as r
 import re
+from flask import Flask, request, render_template, Response
 from bs4 import BeautifulSoup
 
 def get_data():
@@ -47,3 +48,16 @@ def make_row_dict(flight_table):
 
             }
     return row_dict
+
+app = Flask(__name__)
+
+
+
+@app.route("/")
+def return_slug():
+    return 'wrong place!'
+
+@app.route("/json")
+def json_info():
+    chart_data = find_flight_tables(get_data())
+    return chart_data
