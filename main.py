@@ -29,7 +29,7 @@ def make_row_dict(flight_table):
 
     row_dict = {}
     for row in flight_rows:
-        flight_no = row.find_all('th')[0].contents[0]
+        flight_no = row.find_all('th')[0].get_text()
         if flight_no != 0:
             cells = row.find_all('td')
             cells_text = [strip_citations(cell.get_text()) for cell in cells]
@@ -40,7 +40,7 @@ def make_row_dict(flight_table):
                 'payload': cells_text[3],
                 'payload_mass': {
                     'kg': cells_text[4].split('\xa0')[0].replace(',', ''),
-                    'lbs': cells_text[4].split('(')[1].split('\xa0')[0].replace(',', '')
+                    # 'lbs': cells_text[4].split('(')[1].split('\xa0')[0].replace(',', '')
                 },
                 'orbit': cells_text[5],
                 'customer': cells_text[6].split('\\n'),
@@ -49,6 +49,16 @@ def make_row_dict(flight_table):
 
             }
     return row_dict
+
+def make_rows_dict(chart_data):
+    rows_dict = {}
+    for table in chart_data:
+        table_dict = make_row_dict(table)
+        for row in table_dict.keys():
+            rows_dict[row] = table_dict[row]
+    
+    return rows_dict
+
 
 app = Flask(__name__)
 
@@ -60,5 +70,5 @@ def return_slug():
 
 @app.route("/json")
 def json_info():
-    chart_data = find_flight_tables(get_data())
-    return json.dumps(chart_data)
+    json = make_rows_dict(find_flight_tables(get_data()))
+    return json
