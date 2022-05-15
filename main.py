@@ -1,5 +1,7 @@
+from time import strftime, strptime
 import requests as r
 import re
+import time
 from flask import Flask, request, render_template, Response
 import json
 from bs4 import BeautifulSoup
@@ -39,7 +41,7 @@ def make_row_dict(flight_table):
                 'launch_site': cells_text[2],
                 'payload': cells_text[3],
                 'payload_mass': {
-                    'kg': cells_text[4].split('\xa0')[0].replace(',', ''),
+                    'kg': cells_text[4].split('\xa0')[0].replace(',', '') if '–' not in cells_text[4] else '0',
                     # 'lbs': cells_text[4].split('(')[1].split('\xa0')[0].replace(',', '')
                 },
                 'orbit': cells_text[5],
@@ -72,3 +74,50 @@ def return_slug():
 def json_info():
     json = make_rows_dict(find_flight_tables(get_data()))
     return json
+
+@app.route("/api/payload")
+def payload():
+    dataset = make_rows_dict(find_flight_tables(get_data()))
+    time_series = {}
+    running_payload_tally = 0
+    for datapoint in dataset:
+        print(dataset[datapoint]['date_time'])
+        day = dataset[datapoint]['date_time'].split(' ')[0]
+        month = dataset[datapoint]['date_time'].split(' ')[1]
+        year = dataset[datapoint]['date_time'].split(' ')[2][:4]
+        epoch_time = strptime(day + month + year, '%d%B%Y')
+        payload_mass = re.sub('[\D]', '', dataset[datapoint]['payload_mass']['kg'])
+        if payload_mass:
+            time_series[time.mktime(epoch_time)] = int(payload_mass)
+
+    return time_series
+
+
+@app.route("/charts")
+def charts():
+    dataset = make_rows_dict(find_flight_tables(get_data()))
+    x_axis = []
+    y_axis = []
+    launch_payloads = []
+    running_payload_tally = 0
+    for datapoint in dataset:
+        day = dataset[datapoint]['date_time'].split(' ')[0]
+        month = dataset[datapoint]['date_time'].split(' ')[1]
+        year = dataset[datapoint]['date_time'].split(' ')[2][:4]
+        epoch_time = strptime(day + month + year, '%d%B%Y')
+        human_time = strftime('%d %m %Y', epoch_time)
+        print(epoch_time)
+        payload_mass = re.sub('[\D]', '', dataset[datapoint]['payload_mass']['kg'])
+        if payload_mass:
+            running_payload_tally += int(payload_mass)
+            x_axis.append(
+                time.mktime(epoch_time)
+            )
+            y_axis.append(
+                running_payload_tally
+            )
+            launch_payloads.append(
+                int(payload_mass)
+            )
+
+    return render_template("chart.html", x_axis=x_axis, y_axis=y_axis, launch_payloads=launch_payloads, max=running_payload_tally)
