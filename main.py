@@ -43,7 +43,7 @@ def make_row_dict(flight_table):
                     # 'lbs': cells_text[4].split('(')[1].split('\xa0')[0].replace(',', '')
                 },
                 'orbit': cells_text[5],
-                'customer': cells_text[6].split('\\n'),
+                'customer': cells_text[6].split('\n'),
                 'launch_outcome': cells_text[7],
                 'landing_outcome': cells_text[8]
 
