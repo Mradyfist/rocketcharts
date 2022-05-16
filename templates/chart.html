@@ -30,13 +30,13 @@
             if (border) {
                 switch(normalized_orbit) {
                 case 'LEO':
-                    orbit_color = 'rgb(0, 205, 0)'
+                    orbit_color = 'rgb(0, 200, 90)'
                     break;
                 case 'MEO':
-                    orbit_color = 'rgb(0, 235, 112)'
+                    orbit_color = 'rgb(0, 200, 90)'
                     break;
                 case 'GTO':
-                    orbit_color = 'rgb(0, 112, 235)'
+                    orbit_color = 'rgb(0, 200, 90)'
                     break;
                 case 'SSO':
                     orbit_color = 'rgb(235, 79, 0)'
@@ -50,12 +50,15 @@
             } else {
                 switch(normalized_orbit) {
                 case 'LEO':
-                    orbit_color = 'rgb(0, 225, 0)'
+                    orbit_color = 'rgb(0, 132, 90)'
                     break;
                 case 'MEO':
-                    orbit_color = 'rgb(0, 255, 132)'
+                    orbit_color = 'rgb(0, 132, 180)'
                     break;
                 case 'GTO':
+                    orbit_color = 'rgb(0, 132, 255)'
+                    break;
+                case 'GTO ':
                     orbit_color = 'rgb(0, 132, 255)'
                     break;
                 case 'SSO':
@@ -76,9 +79,10 @@
         ]
         const data = {
             datasets: [{
-                label: 'Launch Mass to Orbit',
-                backgroundColor: 'rgb(255, 0, 0)',
-                borderColor: 'rgb(255, 99, 132)',
+                label: 'Falcon 9 cumulative mass',
+                backgroundColor: 'rgb(125, 0, 0)',
+                borderColor: 'rgb(125, 0, 0)',
+                showLine: false,
                 fill: true,
                 data: [
                     {% for datapoint in x_axis %}
@@ -89,22 +93,45 @@
                     {% endfor %}                    
                 ],
                 pointRadius: [
-                {% for datapoint in launch_payloads %}
-                    ({{ datapoint }} / 1000),
-                    {% endfor %}                  
+                {% for datapoint in launch_payloads %}                    ({{ datapoint }} / 1500),{% endfor %}                  
 
                 ],
                 pointBackgroundColor: [
-                    {% for datapoint in launch_info %}
-                    orbit_to_color({{ datapoint|safe }}.orbit),
-                    {% endfor %}
+                    {% for datapoint in launch_info %}                    orbit_to_color({{ datapoint|safe }}.orbit),{% endfor %}
                 ],
                 pointBorderColor: [
-                {% for datapoint in launch_info %}
-                    orbit_to_color({{ datapoint|safe }}.orbit, true),
-                    {% endfor %}
+                {% for datapoint in launch_info %}                    orbit_to_color({{ datapoint|safe }}.orbit, true),{% endfor %}
                 ]
-            }]
+            }, 
+            {
+                label: 'ISS mass',
+                backgroundColor: 'rgb(255, 255, 0)',
+                borderColor: 'rgb(255, 255, 0)',
+                pointRadius: 0,
+                data: [
+                {% for datapoint in x_axis %}
+                    {
+                    x: ({{ datapoint }} * 1000),
+                    y: 420000
+                    },
+                    {% endfor %}                    
+                ]
+            },
+            {
+                label: 'Tiangong mass (on completion)',
+                backgroundColor: 'rgb(0, 255, 0)',
+                borderColor: 'rgb(0, 255, 0)',
+                pointRadius: 0,
+                data: [
+                {% for datapoint in x_axis %}
+                    {
+                    x: ({{ datapoint }} * 1000),
+                    y: 100000
+                    },
+                    {% endfor %}                    
+                ]
+            },
+            ]
         };
 
         const config = {
@@ -114,20 +141,35 @@
                 scales: {
                     x: {
                         type: 'time',
+                        title: {
+                            display: true,
+                            text: 'Date'
+                        },
                         time: {
                             // unit: 'second'
                         },
                         grid: {
-                            color: 'rgb(200,200,200)'
+                            color: 'rgb(15,15,15)'
                         }
                     },
                     y: {
+                        title: {
+                            display: true,
+                            text: 'Cumulative mass (kg) to orbit'
+                        },
                         grid: {
-                            color: 'rgb(200,200,200)'
-                        }
+                            color: 'rgb(100,100,100)'
+                        },
+                        max: (Math.round((({{ max }} + ({{ max }} * .2))) / 100000) * 100000)
                     },
                 },
                 plugins: {
+                    legend: {
+                        position: 'chartArea',
+                        labels: {
+                            color: 'rgb(225, 225, 225)'
+                        }
+                    },
                     tooltip: {
                         callbacks: {
                             label: function(context) {
@@ -165,7 +207,6 @@
         mychart.fillStyle = 'rgb(0,0,0)'
 
         steps = 10
-        max = {{ max }}
 
         // draw bar chart
         new Chart(mychart,
