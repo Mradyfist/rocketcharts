@@ -113,6 +113,7 @@ def charts():
         this_launch_info = {
             'orbit': dataset[datapoint]['orbit'],
             'payload': dataset[datapoint]['payload'],
+            'payload_mass': dataset[datapoint]['payload_mass'],
             'booster_version': dataset[datapoint]['booster_version'],
             'launch_site': dataset[datapoint]['launch_site'],
             'customer': dataset[datapoint]['customer'],
