@@ -98,15 +98,25 @@ def charts():
     dataset = make_rows_dict(find_flight_tables(get_data()))
     x_axis = []
     y_axis = []
+    launch_info = []
     launch_payloads = []
     running_payload_tally = 0
     for datapoint in dataset:
+
         day = dataset[datapoint]['date_time'].split(' ')[0]
         month = dataset[datapoint]['date_time'].split(' ')[1]
         year = dataset[datapoint]['date_time'].split(' ')[2][:4]
+
         epoch_time = strptime(day + month + year, '%d%B%Y')
         human_time = strftime('%d %m %Y', epoch_time)
-        print(epoch_time)
+
+        this_launch_info = {
+            'orbit': dataset[datapoint]['orbit'],
+            'payload': dataset[datapoint]['payload'],
+            'booster_version': dataset[datapoint]['booster_version'],
+            'launch_site': dataset[datapoint]['launch_site'],
+            'customer': dataset[datapoint]['customer'],
+        }
         payload_mass = re.sub('[\D]', '', dataset[datapoint]['payload_mass']['kg'])
         if payload_mass:
             running_payload_tally += int(payload_mass)
@@ -119,5 +129,8 @@ def charts():
             launch_payloads.append(
                 int(payload_mass)
             )
+            launch_info.append(
+                this_launch_info
+            )
 
-    return render_template("chart.html", x_axis=x_axis, y_axis=y_axis, launch_payloads=launch_payloads, max=running_payload_tally)
+    return render_template("chart.html", x_axis=x_axis, y_axis=y_axis, launch_payloads=launch_payloads, launch_info=launch_info, max=running_payload_tally)
