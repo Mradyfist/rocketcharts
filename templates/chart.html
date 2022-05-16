@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]>      <html class="no-js"> <!--<![endif]-->
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>Charts!</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="">
+        <script src='https://cdn.jsdelivr.net/npm/chart.js'></script>
+    </head>
+    <body style="background-color: black;">
+        <!--[if lt IE 7]>
+            <p class="browsehappy">You are using an <strong>outdated</strong> browser. Please <a href="#">upgrade your browser</a> to improve your experience.</p>
+<![endif]-->
+        <!-- <script src="" async defer></script> -->
+        <canvas id="chart"></canvas>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/date-fns/1.30.1/date_fns.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+        <script>
+        function orbit_to_color(orbit, border) {
+            console.log(orbit);
+            const normalized_orbit = orbit.replace('Polar ', '').replace(' (ISS)', '')
+            var orbit_color;
+
+            if (border) {
+                switch(normalized_orbit) {
+                case 'LEO':
+                    orbit_color = 'rgb(0, 205, 0)'
+                    break;
+                case 'MEO':
+                    orbit_color = 'rgb(0, 235, 112)'
+                    break;
+                case 'GTO':
+                    orbit_color = 'rgb(0, 112, 235)'
+                    break;
+                case 'SSO':
+                    orbit_color = 'rgb(235, 79, 0)'
+                    break;
+                case 'Heliocentric':
+                    orbit_color = 'rgb(235, 235, 0)'
+                    break;
+                default:
+                    orbit_color = 'rgb(0, 0, 0)'
+                }
+            } else {
+                switch(normalized_orbit) {
+                case 'LEO':
+                    orbit_color = 'rgb(0, 225, 0)'
+                    break;
+                case 'MEO':
+                    orbit_color = 'rgb(0, 255, 132)'
+                    break;
+                case 'GTO':
+                    orbit_color = 'rgb(0, 132, 255)'
+                    break;
+                case 'SSO':
+                    orbit_color = 'rgb(255, 99, 0)'
+                    break;
+                case 'Heliocentric':
+                    orbit_color = 'rgb(255, 255, 0)'
+                    break;
+                default:
+                    orbit_color = 'rgb(0, 0, 0)'
+            }
+
+            }
+            return orbit_color
+        }
+        const launch_info = [
+{{ launch_info|safe }}
+        ]
+        const data = {
+            datasets: [{
+                label: 'Launch Mass to Orbit',
+                backgroundColor: 'rgb(255, 0, 0)',
+                borderColor: 'rgb(255, 99, 132)',
+                fill: true,
+                data: [
+                    {% for datapoint in x_axis %}
+                    {
+                    x: ({{ datapoint }} * 1000),
+                    y: {{ y_axis[loop.index0] }}
+                    },
+                    {% endfor %}                    
+                ],
+                pointRadius: [
+                {% for datapoint in launch_payloads %}
+                    ({{ datapoint }} / 1000),
+                    {% endfor %}                  
+
+                ],
+                pointBackgroundColor: [
+                    {% for datapoint in launch_info %}
+                    orbit_to_color({{ datapoint|safe }}.orbit),
+                    {% endfor %}
+                ],
+                pointBorderColor: [
+                {% for datapoint in launch_info %}
+                    orbit_to_color({{ datapoint|safe }}.orbit, true),
+                    {% endfor %}
+                ]
+            }]
+        };
+
+        const config = {
+            type: 'line',
+            data: data,
+            options: {
+                scales: {
+                    x: {
+                        type: 'time',
+                        time: {
+                            // unit: 'second'
+                        },
+                        grid: {
+                            color: 'rgb(200,200,200)'
+                        }
+                    },
+                    y: {
+                        grid: {
+                            color: 'rgb(200,200,200)'
+                        }
+                    },
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const index = context.dataIndex;
+                                const this_launch_info = {
+                                    'orbit': launch_info[0][index]['orbit'],
+                                    'payload': launch_info[0][index]['payload'],
+                                    'booster_version': launch_info[0][index]['booster_version'],
+                                    'launch_site': launch_info[0][index]['launch_site'],
+                                    'customer': launch_info[0][index]['customer']
+                                }
+                                 
+                            
+                                const tooltip = [];
+                                Object.keys(this_launch_info).map((key) => {
+                                    const line_item = key + ': ' + this_launch_info[key]
+                                    tooltip.push(line_item)
+                                })
+                                
+                                // Payload: ${this_launch_info.payload}
+                                // Booster version: ${this_launch_info.booster_version}
+                                // Launch site: ${this_launch_info.launch_site}
+                                // Customer: ${this_launch_info.customer}
+
+                                return tooltip;
+                            }
+                        }
+                    }
+                }
+            }
+        };
+
+        // get bar chart canvas
+        var mychart = document.getElementById("chart").getContext("2d");
+        mychart.fillStyle = 'rgb(0,0,0)'
+
+        steps = 10
+        max = {{ max }}
+
+        // draw bar chart
+        new Chart(mychart,
+            config
+        );
+
+        </script>
+    </body>
+</html>
