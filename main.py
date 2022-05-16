@@ -93,7 +93,7 @@ def payload():
     return time_series
 
 
-@app.route("/charts")
+@app.route("/falcon9")
 def charts():
     dataset = make_rows_dict(find_flight_tables(get_data()))
     x_axis = []
