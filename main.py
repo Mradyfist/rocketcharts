@@ -8,10 +8,13 @@ from bs4 import BeautifulSoup
 
 def get_data():
     wiki = 'https://en.wikipedia.org/'
-    page_title = 'List_of_Falcon_9_and_Falcon_Heavy_launches'
-    source_page = r.get(f'{wiki}api/rest_v1/page/html/{page_title}')
+    page_titles = ['List_of_Falcon_9_and_Falcon_Heavy_launches_(2010–2019)', 'List_of_Falcon_9_and_Falcon_Heavy_launches']
+    full_text = ''
+    for page in page_titles:
+        source_page = r.get(f'{wiki}api/rest_v1/page/html/{page}')
+        full_text += source_page.text
 
-    return source_page.text
+    return full_text
 
 def find_flight_tables(html):
     soup = BeautifulSoup(html, 'html.parser')
